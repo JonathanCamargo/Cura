@@ -915,6 +915,8 @@ class CuraApplication(QtApplication):
 
         # initialize info objects
         self._print_information = PrintInformation.PrintInformation(self)
+        from cura.UI.InertialProperties import InertialProperties
+        self._inertial_properties = InertialProperties(self)
         self._cura_actions = CuraActions.CuraActions(self)
         self._print_order_manager = PrintOrderManager(self.getObjectsModel().getNodes)
         self.processEvents()
@@ -1290,6 +1292,7 @@ class CuraApplication(QtApplication):
         engine.rootContext().setContextProperty("CuraApplication", self)
         engine.rootContext().setContextProperty("PrintOrderManager", self._print_order_manager)
         engine.rootContext().setContextProperty("PrintInformation", self._print_information)
+        engine.rootContext().setContextProperty("InertialProperties", self._inertial_properties)
         engine.rootContext().setContextProperty("CuraActions", self._cura_actions)
         engine.rootContext().setContextProperty("CuraSDKVersion", ApplicationMetadata.CuraSDKVersion)
 

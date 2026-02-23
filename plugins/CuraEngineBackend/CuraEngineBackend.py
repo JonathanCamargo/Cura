@@ -10,6 +10,8 @@ import sys
 from time import time
 from typing import Any, cast, Dict, List, Optional, Set, TYPE_CHECKING
 
+import numpy
+
 from PyQt6.QtGui import QDesktopServices, QImage
 
 from UM.Backend.Backend import Backend, BackendState
@@ -35,6 +37,7 @@ from .StartSliceJob import StartSliceJob, StartJobResult
 import pyArcus as Arcus
 
 if TYPE_CHECKING:
+    from cura.ComputeInertialPropertiesJob import ComputeInertialPropertiesJob
     from cura.Machines.Models.MultiBuildPlateModel import MultiBuildPlateModel
     from cura.Machines.MachineErrorChecker import MachineErrorChecker
     from UM.Scene.Scene import Scene
@@ -59,6 +62,9 @@ class CuraEngineBackend(QObject, Backend):
 
     slicingCancelled = Signal()
     """Emitted when the slicing process is aborted forcefully."""
+
+    inertialPropertiesChanged = Signal()
+    """Emitted when inertial properties computation completes."""
 
     def __init__(self) -> None:
         """Starts the back-end plug-in.
@@ -154,6 +160,10 @@ class CuraEngineBackend(QObject, Backend):
         self._tool_active: bool = False  # If a tool is active, some tasks do not have to do anything
         self._always_restart: bool = True # Always restart the engine when starting a new slice. Don't keep the process running. TODO: Fix engine statelessness.
         self._process_layers_job: Optional[ProcessSlicedLayersJob] = None # The currently active job to process layers, or None if it is not processing layers.
+        self._inertial_properties_job: Optional["ComputeInertialPropertiesJob"] = None
+        self._inertial_mass: float = 0.0
+        self._inertial_center_of_mass: Optional["numpy.ndarray"] = None
+        self._inertial_tensor: Optional["numpy.ndarray"] = None
         self._build_plates_to_be_sliced: List[int] = []  # what needs slicing?
         self._engine_is_fresh: bool = True  # Is the newly started engine used before or not?
 
@@ -207,6 +217,7 @@ class CuraEngineBackend(QObject, Backend):
         self._last_socket_error: Optional[Arcus.Error] = None
 
         application.initializationFinished.connect(self.initialize)
+        self.slicingStarted.connect(self._clearInertialResults)
 
         # Ensure that the initial value for send_engine_crash is handled correctly.
         application.callLater(self._onPreferencesChanged, "info/send_engine_crash")
@@ -895,6 +906,19 @@ class CuraEngineBackend(QObject, Backend):
 
             self._startProcessSlicedLayersJob(active_build_plate)
         # self._onActiveViewChanged()
+
+        # Start inertial properties computation (unconditionally, independent of SimulationView)
+        if (self._start_slice_job_build_plate is not None and
+                self._start_slice_job_build_plate in self._stored_optimized_layer_data):
+            from cura.ComputeInertialPropertiesJob import ComputeInertialPropertiesJob
+            inertial_job = ComputeInertialPropertiesJob(
+                self._stored_optimized_layer_data[self._start_slice_job_build_plate]
+            )
+            inertial_job.setBuildPlate(self._start_slice_job_build_plate)
+            inertial_job.finished.connect(self._onInertialPropertiesJobFinished)
+            inertial_job.start()
+            self._inertial_properties_job = inertial_job
+
         self._start_slice_job_build_plate = None
 
         Logger.log("d", "See if there is more to slice...")
@@ -1160,6 +1184,22 @@ class CuraEngineBackend(QObject, Backend):
         self._process_layers_job = None
         Logger.log("d", "See if there is more to slice(2)...")
         self._invokeSlice()
+
+    def _onInertialPropertiesJobFinished(self, job: "ComputeInertialPropertiesJob") -> None:
+        """Called on the main thread when inertial properties computation completes."""
+        self._inertial_mass = job.getMass()
+        self._inertial_center_of_mass = job.getCenterOfMass()
+        self._inertial_tensor = job.getInertiaTensor()
+        self._inertial_properties_job = None
+        Logger.log("d", "Inertial properties stored: mass=%.3fg, CoM=%s",
+                   self._inertial_mass, self._inertial_center_of_mass)
+        self.inertialPropertiesChanged.emit()
+
+    def _clearInertialResults(self) -> None:
+        """Clear inertial results when a new slice starts."""
+        self._inertial_mass = 0.0
+        self._inertial_center_of_mass = None
+        self._inertial_tensor = None
 
     def enableTimer(self) -> None:
         """Connect slice function to timer."""

@@ -190,4 +190,113 @@ Column
             textFormat: Text.RichText
         }
     }
+
+    Column
+    {
+        id: inertialSpecification
+        width: parent.width
+        bottomPadding: UM.Theme.getSize("default_margin").height
+        leftPadding: UM.Theme.getSize("default_margin").width
+        rightPadding: UM.Theme.getSize("default_margin").width
+        visible: InertialProperties.hasData
+
+        UM.Label
+        {
+            text: catalog.i18nc("@label", "Inertial properties").toUpperCase()
+            color: UM.Theme.getColor("primary")
+            font: UM.Theme.getFont("default_bold")
+        }
+
+        UM.Label
+        {
+            width: parent.width - 2 * UM.Theme.getSize("default_margin").width
+            text: catalog.i18nc("@label", "Mass: %1 g").arg(InertialProperties.mass.toFixed(2))
+        }
+
+        UM.Label
+        {
+            width: parent.width - 2 * UM.Theme.getSize("default_margin").width
+            text: catalog.i18nc("@label", "Center of mass (mm):")
+            font: UM.Theme.getFont("default_bold")
+        }
+
+        Row
+        {
+            width: parent.width - 2 * UM.Theme.getSize("default_margin").width
+            spacing: UM.Theme.getSize("default_margin").width
+
+            UM.Label
+            {
+                width: parent.width / 3
+                text: "X: " + InertialProperties.centerOfMassX.toFixed(2)
+            }
+            UM.Label
+            {
+                width: parent.width / 3
+                text: "Y: " + InertialProperties.centerOfMassY.toFixed(2)
+            }
+            UM.Label
+            {
+                width: parent.width / 3
+                text: "Z: " + InertialProperties.centerOfMassZ.toFixed(2)
+            }
+        }
+
+        UM.Label
+        {
+            width: parent.width - 2 * UM.Theme.getSize("default_margin").width
+            text: catalog.i18nc("@label", "Inertia tensor (g\u00B7mm\u00B2):")
+            font: UM.Theme.getFont("default_bold")
+        }
+
+        Row
+        {
+            width: parent.width - 2 * UM.Theme.getSize("default_margin").width
+            spacing: UM.Theme.getSize("default_margin").width
+
+            UM.Label
+            {
+                width: parent.width / 3
+                text: "Ixx: " + InertialProperties.ixx.toFixed(2)
+            }
+            UM.Label
+            {
+                width: parent.width / 3
+                text: "Iyy: " + InertialProperties.iyy.toFixed(2)
+            }
+            UM.Label
+            {
+                width: parent.width / 3
+                text: "Izz: " + InertialProperties.izz.toFixed(2)
+            }
+        }
+
+        Row
+        {
+            width: parent.width - 2 * UM.Theme.getSize("default_margin").width
+            spacing: UM.Theme.getSize("default_margin").width
+
+            UM.Label
+            {
+                width: parent.width / 3
+                text: "Ixy: " + InertialProperties.ixy.toFixed(2)
+            }
+            UM.Label
+            {
+                width: parent.width / 3
+                text: "Ixz: " + InertialProperties.ixz.toFixed(2)
+            }
+            UM.Label
+            {
+                width: parent.width / 3
+                text: "Iyz: " + InertialProperties.iyz.toFixed(2)
+            }
+        }
+
+        Cura.SecondaryButton
+        {
+            text: catalog.i18nc("@button", "Copy to clipboard")
+            onClicked: InertialProperties.copyToClipboard()
+        }
+    }
 }
