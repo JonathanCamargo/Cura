@@ -24,6 +24,13 @@ if sys.platform != "linux":  # Turns out the Linux build _does_ use this, but we
     os.environ["QML2_IMPORT_PATH"] = ""  # Security workaround: Don't need it, and introduces an attack vector, so set to nul.
     os.environ["QT_OPENGL_DLL"] = ""  # Security workaround: Don't need it, and introduces an attack vector, so set to nul.
 
+try:
+    import pyArcus
+    import pySavitar
+    import pynest2d
+except ImportError:
+    pass
+
 from PyQt6.QtNetwork import QSslConfiguration, QSslSocket
 
 from UM.Platform import Platform

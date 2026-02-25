@@ -59,8 +59,13 @@ class InertialProperties(QObject):
 
         Swaps Y↔Z to convert from internal Y-up to user-facing Z-up:
           user X = internal X,  user Y = internal Z,  user Z = internal Y
-        For the tensor (T' = P T P^T where P swaps axes 1,2):
-          Ixx stays, Iyy↔Izz swap, Ixy↔Ixz swap, Iyz stays.
+
+        CoM uses Cura's left-handed frame (matching the move tool display).
+
+        The inertia tensor uses the right-handed G-code convention
+        (X right, Y toward back, Z up).  The conversion T' = P T P^T
+        where P includes Y-negation gives:
+          Ixx stays, Iyy↔Izz swap, Ixy=-Ixz_int, Ixz=Ixy_int, Iyz=-Iyz_int.
         """
         try:
             self._mass = float(self._backend._inertial_mass)
@@ -76,9 +81,9 @@ class InertialProperties(QObject):
                 self._ixx = float(tensor[0, 0])              # Ixx stays
                 self._iyy = float(tensor[2, 2])              # Iyy_user ← Izz_internal
                 self._izz = float(tensor[1, 1])              # Izz_user ← Iyy_internal
-                self._ixy = float(tensor[0, 2])              # Ixy_user ← Ixz_internal
+                self._ixy = -float(tensor[0, 2])             # Ixy_user ← -Ixz_internal (RH)
                 self._ixz = float(tensor[0, 1])              # Ixz_user ← Ixy_internal
-                self._iyz = float(tensor[1, 2])              # Iyz stays (symmetric)
+                self._iyz = -float(tensor[1, 2])             # Iyz_user ← -Iyz_internal (RH)
 
             self._has_data = True
         except Exception:
@@ -158,13 +163,17 @@ class InertialProperties(QObject):
 
         text = (
             f"Mass: {self._mass:.4f} g\n"
-            f"Center of Mass (mm): [{self._center_of_mass_x:.2f}, "
+            f"\n"
+            f"Center of Mass (mm) [Cura frame: X right, Y depth, Z up]:\n"
+            f"  [{self._center_of_mass_x:.2f}, "
             f"{self._center_of_mass_y:.2f}, {self._center_of_mass_z:.2f}]\n"
-            f"Inertia Tensor (g*mm^2):\n"
+            f"\n"
+            f"Inertia Tensor (g*mm^2) [Right-handed frame: X right, Y depth, Z up]:\n"
             f"  Ixx: {self._ixx:.4f}  Ixy: {self._ixy:.4f}  Ixz: {self._ixz:.4f}\n"
             f"  Ixy: {self._ixy:.4f}  Iyy: {self._iyy:.4f}  Iyz: {self._iyz:.4f}\n"
             f"  Ixz: {self._ixz:.4f}  Iyz: {self._iyz:.4f}  Izz: {self._izz:.4f}\n"
-            f"Inertia Tensor (kg*m^2):\n"
+            f"\n"
+            f"Inertia Tensor (kg*m^2) [Right-handed frame: X right, Y depth, Z up]:\n"
             f"  Ixx: {self._ixx * si_factor:.10e}  Ixy: {self._ixy * si_factor:.10e}  "
             f"Ixz: {self._ixz * si_factor:.10e}\n"
             f"  Ixy: {self._ixy * si_factor:.10e}  Iyy: {self._iyy * si_factor:.10e}  "

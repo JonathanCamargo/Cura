@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(find C:\\\\git\\\\Cura:*)",
+      "Bash(cd:*)",
+      "Bash(python3:*)"
+    ]
+  }
+}

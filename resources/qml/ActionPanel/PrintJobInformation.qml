@@ -220,6 +220,14 @@ Column
             font: UM.Theme.getFont("default_bold")
         }
 
+        UM.Label
+        {
+            width: parent.width - 2 * UM.Theme.getSize("default_margin").width
+            text: catalog.i18nc("@label", "Cura frame: X right, Y depth, Z up")
+            font: UM.Theme.getFont("small")
+            color: UM.Theme.getColor("text_inactive")
+        }
+
         Row
         {
             width: parent.width - 2 * UM.Theme.getSize("default_margin").width
@@ -247,6 +255,14 @@ Column
             width: parent.width - 2 * UM.Theme.getSize("default_margin").width
             text: catalog.i18nc("@label", "Inertia tensor (g\u00B7mm\u00B2):")
             font: UM.Theme.getFont("default_bold")
+        }
+
+        UM.Label
+        {
+            width: parent.width - 2 * UM.Theme.getSize("default_margin").width
+            text: catalog.i18nc("@label", "Right-handed frame: X right, Y depth, Z up")
+            font: UM.Theme.getFont("small")
+            color: UM.Theme.getColor("text_inactive")
         }
 
         Row

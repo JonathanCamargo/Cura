@@ -15,16 +15,14 @@ UM.ColorImage
     width: visible ? UM.Theme.getSize("section_icon").width : 0
     height: UM.Theme.getSize("section_icon").height
 
-    color: UM.Theme.getColor("icon")
+    color: popup.opened ? UM.Theme.getColor("primary") : UM.Theme.getColor("icon")
 
     property var printMaterialCosts: PrintInformation.materialCosts
 
     MouseArea
     {
         anchors.fill: parent
-        hoverEnabled: true
-        onEntered: popup.open()
-        onExited: popup.close()
+        onClicked: popup.opened ? popup.close() : popup.open()
     }
 
     Popup
